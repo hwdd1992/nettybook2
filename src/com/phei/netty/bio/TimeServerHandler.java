@@ -45,6 +45,7 @@ public class TimeServerHandler implements Runnable {
       String currentTime = null;
       String body = null;
       while (true) {
+        //SocketInputStream read的时候,如果没有指定超时时间的话,则会一直阻塞.
         body = in.readLine();
         if (body == null) {
           break;

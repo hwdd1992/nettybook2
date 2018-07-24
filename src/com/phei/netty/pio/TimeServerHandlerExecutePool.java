@@ -1,12 +1,12 @@
 /*
  * Copyright 2013-2018 Lilinfeng.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,25 +17,38 @@ package com.phei.netty.pio;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Administrator
- * @date 2014年2月15日
  * @version 1.0
+ * @date 2014年2月15日
  */
 public class TimeServerHandlerExecutePool {
 
-    private ExecutorService executor;
+  private final ExecutorService executor;
 
-    public TimeServerHandlerExecutePool(int maxPoolSize, int queueSize) {
-	executor = new ThreadPoolExecutor(Runtime.getRuntime()
-		.availableProcessors(), maxPoolSize, 120L, TimeUnit.SECONDS,
-		new ArrayBlockingQueue<java.lang.Runnable>(queueSize));
-    }
+  public TimeServerHandlerExecutePool(int maxPoolSize, int queueSize) {
+    ThreadFactory namedThreadFactory = new ThreadFactory() {
+      private final AtomicInteger threadNumber = new AtomicInteger(1);
+      private final String name = "nettyBook2PioDemo-";
 
-    public void execute(java.lang.Runnable task) {
-	executor.execute(task);
-    }
+      @Override
+      public Thread newThread(Runnable r) {
+        return new Thread(Thread.currentThread().getThreadGroup(), r,
+            name + threadNumber.getAndIncrement());
+      }
+    };
+
+    executor = new ThreadPoolExecutor(Runtime.getRuntime()
+        .availableProcessors(), maxPoolSize, 120L, TimeUnit.SECONDS,
+        new ArrayBlockingQueue<>(queueSize), namedThreadFactory);
+  }
+
+  public void execute(Runnable task) {
+    executor.execute(task);
+  }
 }
